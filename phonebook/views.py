@@ -1,9 +1,10 @@
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login as auth_login  # Renamed login to auth_login to avoid conflict
 from django.contrib.auth.forms import UserCreationForm
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404  # Added get_object_or_404 for better error handling
 from rest_framework import viewsets
 from .forms import ContactForm
 from .serializers import *
+from .models import Contact
 
 # View for listing, adding, editing, and deleting contacts
 class ContactListView(viewsets.ModelViewSet):
@@ -13,7 +14,7 @@ class ContactListView(viewsets.ModelViewSet):
 
 def phonebook(request):
     contacts = Contact.objects.all()
-    return render(request, 'phonebook.html', {'contacts': contacts})
+    return render(request, 'home.html', {'contacts': contacts})  # Updated template name
 
 def add_contact(request):
     if request.method == 'POST':
@@ -23,10 +24,10 @@ def add_contact(request):
             return redirect('phonebook')
     else:
         form = ContactForm()
-    return render(request, 'add_contact.html', {'form': form})
+    return render(request, 'add_persone.html', {'form': form})  # Updated template name
 
 def edit_contact(request, pk):
-    contact = Contact.objects.get(pk=pk)
+    contact = get_object_or_404(Contact, pk=pk)
     if request.method == 'POST':
         form = ContactForm(request.POST, instance=contact)
         if form.is_valid():
@@ -34,12 +35,14 @@ def edit_contact(request, pk):
             return redirect('phonebook')
     else:
         form = ContactForm(instance=contact)
-    return render(request, 'edit_contact.html', {'form': form})
+    return render(request, 'edit_persone.html', {'form': form})  # Updated template name
 
 def delete_contact(request, pk):
-    contact = Contact.objects.get(pk=pk)
-    contact.delete()
-    return redirect('phonebook')
+    contact = get_object_or_404(Contact, pk=pk)
+    if request.method == 'POST':
+        contact.delete()
+        return redirect('phonebook')
+    return render(request, 'delete_persone.html', {'contact': contact})  # Updated template name
 
 # View for managing application information
 class AppInfoView(viewsets.ModelViewSet):
@@ -59,7 +62,7 @@ def login(request):
         password = request.POST.get('password')
         user = authenticate(request, email=email, password=password)
         if user is not None:
-            login(request, user)
+            auth_login(request, user)
             return redirect('profile')  # Redirect to the profile page after successful login
         else:
             # Display login credentials error
@@ -81,7 +84,7 @@ def register(request):
             username = form.cleaned_data.get('username')
             raw_password = form.cleaned_data.get('password1')
             user = authenticate(username=username, password=raw_password)
-            login(request, user)
+            auth_login(request, user)
             return redirect('home')
     else:
         form = UserCreationForm()

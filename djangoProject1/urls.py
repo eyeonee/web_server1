@@ -1,11 +1,8 @@
 from django.contrib import admin
 from django.urls import path, include
-from django.urls import path
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
-
-import phonebook
 from phonebook.views import add_contact, edit_contact, delete_contact
 
 schema_view = get_schema_view(
@@ -24,12 +21,8 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('phone-book/', include('phonebook.urls')),
-    path('add/', add_contact, name='add_contact'),
-    path('edit/<int:pk>/', edit_contact, name='edit_contact'),
-    path('delete_contact/<int:pk>/', delete_contact, name='delete_contact'),
+    path('phone-book/', include('phonebook.urls')),  # Include the phonebook app URLs
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    path('', lambda request: redirect('home')),  # Redirect root URL to home
 ]
-
-
